@@ -8,7 +8,7 @@ gemfile(true) do
   git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
   gem "activerecord", "7.1.2"
-  gem "sqlite3", "1.4.2"
+  gem "pg", "1.2.3"
   gem 'async'
   gem "faker"
 end
@@ -19,11 +19,14 @@ require "logger"
 require "csv"
 require "async"
 
-# This connection will do for database-independent bug reports.
+# Establish connection to PostgreSQL
 ActiveRecord::Base.establish_connection(
-  adapter: "sqlite3",
+  adapter: "postgresql",
   encoding: "unicode",
-  database: ":memory:",
+  database: ENV["DB_NAME"],
+  username: "postgres",
+  password: "",
+  host: ENV["DB_HOST"],
 )
 
 ActiveRecord::Base.logger = Logger.new(STDOUT)
@@ -76,8 +79,12 @@ class BugTest < Minitest::Test
       return
     end
 
-    # Save all items to the database after generating descriptions in a single insert
-    Item.create!(items)
+    # Save all items to the database within a transaction
+    ActiveRecord::Base.transaction do
+      items.each do |item|
+        Item.create!(item)
+      end
+    end
 
     end_time = Time.now
     elapsed_time = end_time - start_time

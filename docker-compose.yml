@@ -6,12 +6,29 @@ services:
     environment:
       POSTGRES_HOST_AUTH_METHOD: "trust"
       POSTGRES_DB: "test"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   test:
     build: .
     volumes:
       - .:/app
     depends_on:
-      - database
+      database:
+        condition: service_healthy
+    environment:
+      DB_HOST: "database"
+      DB_NAME: "test"
+    command: ruby app.rb
+  test2:
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      database:
+        condition: service_healthy
     environment:
       DB_HOST: "database"
       DB_NAME: "test"

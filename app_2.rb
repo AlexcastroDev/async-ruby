@@ -8,25 +8,47 @@ gemfile(true) do
   git_source(:github) { |repo| "https://github.com/#{repo}.git" }
 
   gem "activerecord", "7.1.2"
-  gem "pg", "1.2.3"
+  gem "pg", "1.5.6"
   gem 'async-io'
   gem "faker"
+  gem "csv" # will be deprecated in Ruby 3.4 
 end
 
 require "active_record"
 require "minitest/autorun"
 require "logger"
 require "csv"
-require "async"
+require 'async/io'
+
 
 # Establish connection to PostgreSQL
 ActiveRecord::Base.establish_connection(
   adapter: "postgresql",
   encoding: "unicode",
-  database: ENV["DB_NAME"],
+  database: "test",
   username: "postgres",
   password: "",
-  host: ENV["DB_HOST"],
+  host: "database",
+)
+
+# Create a new database if the current database is not 'db1' and set the connection to 'db1'
+db_name = 'db2'
+# Drop the database if it exists
+puts "Dropping database #{db_name}"
+ActiveRecord::Base.connection.drop_database db_name
+
+# Create the database
+puts "Creating database #{db_name}"
+ActiveRecord::Base.connection.create_database db_name
+
+# Change database connection to the new database
+ActiveRecord::Base.establish_connection(
+  adapter: "postgresql",
+  encoding: "unicode",
+  database: db_name,
+  username: "postgres",
+  password: "",
+  host: "database",
 )
 
 ActiveRecord::Base.logger = Logger.new(STDOUT)

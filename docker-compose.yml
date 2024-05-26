@@ -32,4 +32,4 @@ services:
     environment:
       DB_HOST: "database"
       DB_NAME: "test"
-    command: ruby app.rb
+    command: ruby app_2.rb
